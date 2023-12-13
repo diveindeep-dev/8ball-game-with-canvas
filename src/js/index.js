@@ -1,14 +1,20 @@
+import { COLORS, SIZES } from '../styles/variable.js';
 const { Engine, Render, Runner } = Matter;
+
+export const GAME = {
+  width: 600,
+  height: 900,
+};
 
 const engine = Engine.create();
 const render = Render.create({
   engine,
   element: document.getElementById('game-display'),
   options: {
-    width: 640,
-    height: 960,
+    width: GAME.width,
+    height: GAME.height,
     wireframes: false,
-    background: 'var(--color-game-back)',
+    background: COLORS.gameBack,
   },
 });
 
@@ -17,7 +23,7 @@ Runner.run(engine);
 
 const resize = () => {
   const screenWidth = window.innerWidth;
-  const screenHeight = window.innerHeight - 50;
+  const screenHeight = window.innerHeight - SIZES.menuHeight;
 
   let gameWidth;
   let gameHeight;

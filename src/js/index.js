@@ -87,7 +87,9 @@ const newIngredient = (position, fixedIndex, option) => {
   const ingredient = BURGER[index];
   const scale = (ingredient.radius * 2) / 1000;
   const positionY =
-    position.y !== undefined ? position.y : scoreHeight - ingredient.radius;
+    position.y !== undefined
+      ? position.y
+      : scoreHeight - ingredient.radius * 1.5;
   const options = option || { isSleeping: true, isStatic: true };
 
   //Matter.Bodies.circle(x, y, radius, [options], [maxSides])
@@ -151,6 +153,11 @@ render.mouse = mouse;
 
 // 마우스 이동 or 터치 이동
 Events.on(mouseConstraint, 'mousemove', (e) => {
+  const radius = BURGER[currentIndex].radius;
+  const minX = radius + SIZES.wallThickness;
+  const maxX = GAME.width - SIZES.wallThickness - radius;
+  if (e.mouse.position.x < minX || e.mouse.position.x > maxX) return;
+
   readyItem.position.x = e.mouse.position.x;
 });
 

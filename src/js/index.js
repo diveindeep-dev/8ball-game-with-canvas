@@ -39,11 +39,6 @@ const wallOptions = {
 };
 
 const wallStatics = [
-  // ScoreLine
-  Bodies.rectangle(GAME.width / 2, scoreHeight, GAME.width, 1, {
-    isStatic: true,
-    isSensor: true,
-  }),
   //Left
   Bodies.rectangle(
     wallThickness / 2,
@@ -71,6 +66,10 @@ const wallStatics = [
 ];
 
 Composite.add(engine.world, wallStatics);
+
+const displayScore = () => {
+  document.getElementById('game-score').innerText = GAME.score;
+};
 
 let readyItem = null;
 let currentIndex = null;
@@ -118,6 +117,7 @@ const dropItem = (x) => {
   });
   Composite.add(engine.world, droppedItem);
   GAME.score += BURGER[currentIndex].point;
+  displayScore();
   Composite.remove(engine.world, readyItem);
 
   // 새로운 readyItem 할당 후 0.5초 후 표시
@@ -132,6 +132,7 @@ const dropItem = (x) => {
 };
 
 const startGame = () => {
+  displayScore();
   if (GAME.score > 0) return;
   readyItem = newIngredient({ x: GAME.width / 2 });
   currentIndex = readyItem.index;
@@ -192,6 +193,7 @@ Events.on(engine, 'collisionStart', (e) => {
       );
       Composite.add(engine.world, nextItem);
       GAME.score += BURGER[newIndex].point;
+      displayScore();
     }
   });
 });
@@ -202,15 +204,22 @@ const resize = () => {
 
   let gameWidth;
   let gameHeight;
+  let scale;
   if (screenWidth * 1.5 > screenHeight) {
     gameHeight = screenHeight;
     gameWidth = screenHeight / 1.5;
+    scale = gameHeight / GAME.height;
   } else {
     gameWidth = screenWidth;
     gameHeight = screenWidth * 1.5;
+    scale = gameWidth / GAME.width;
   }
+
   render.canvas.style.width = `${gameWidth}px`;
   render.canvas.style.height = `${gameHeight}px`;
+
+  document.getElementById('game-score').style.width = `${GAME.width}px`;
+  document.getElementById('game-score').style.transform = `scale(${scale})`;
 };
 
 document.body.onload = resize;

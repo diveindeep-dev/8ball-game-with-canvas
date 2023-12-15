@@ -5,6 +5,8 @@ const { Engine,  Render,  Runner,  Composite,  Bodies,  Mouse,  MouseConstraint,
 const STATUS = {
   READY: 1,
   DROP: 2,
+  PAUSE: 3,
+  END: 4,
 };
 
 export const GAME = {
@@ -12,12 +14,21 @@ export const GAME = {
   height: 900,
   status: STATUS.READY,
   score: 0,
+  record: 0,
+  combo: 5,
+  elements: {
+    display: document.getElementById('game-display'),
+    ui: document.getElementById('game-combo-ui'),
+    valueScore: document.getElementById('value-score'),
+    valueCombo: document.getElementById('value-combo'),
+    valueRecord: document.getElementById('value-record'),
+  },
 };
 
 const engine = Engine.create();
 const render = Render.create({
   engine,
-  element: document.getElementById('game-display'),
+  element: GAME.elements.display,
   options: {
     width: GAME.width,
     height: GAME.height,
@@ -58,9 +69,9 @@ const wallStatics = [
   // Bottom
   Bodies.rectangle(
     GAME.width / 2,
-    GAME.height - wallThickness,
+    GAME.height - wallThickness * 2,
     GAME.width,
-    wallThickness * 2,
+    wallThickness * 4,
     wallOptions,
   ),
 ];
@@ -68,7 +79,36 @@ const wallStatics = [
 Composite.add(engine.world, wallStatics);
 
 const displayScore = () => {
-  document.getElementById('game-score').innerText = GAME.score;
+  GAME.elements.valueScore.innerText = GAME.score;
+  GAME.elements.valueCombo.innerText = GAME.combo;
+};
+
+const displayRecord = () => {
+  GAME.elements.valueRecord.innerText = GAME.record;
+};
+
+const getRecord = () => {
+  const stored = localStorage.getItem('8ball-combo');
+  if (stored) {
+    GAME.record = JSON.parse(stored);
+  } else {
+    GAME.record = 0;
+  }
+};
+
+const saveRecord = () => {
+  if (GAME.status !== STATUS.END) return;
+
+  if (GAME.score > GAME.record) {
+    GAME.record = GAME.score;
+    localStorage.setItem('8ball-combo', JSON.stringify(GAME.record));
+  }
+  displayRecord();
+};
+
+const endGame = () => {
+  GAME.status = STATUS.END;
+  saveRecord();
 };
 
 let readyItem = null;
@@ -132,8 +172,11 @@ const dropItem = (x) => {
 };
 
 const startGame = () => {
-  displayScore();
   if (GAME.score > 0) return;
+
+  getRecord();
+  displayRecord();
+  displayScore();
   readyItem = newIngredient({ x: GAME.width / 2 });
   currentIndex = readyItem.index;
   Composite.add(engine.world, readyItem);
@@ -176,6 +219,17 @@ Events.on(engine, 'collisionStart', (e) => {
     const lastIndex = BURGER.length - 1;
     if (bodyA.index === lastIndex || bodyB.index === lastIndex) return;
 
+    // 종료 조건
+    const aHeight = bodyA.position.y + BURGER[bodyA.index].radius;
+    const bHeight = bodyB.position.y + BURGER[bodyB.index].radius;
+
+    //게임종료
+    if (aHeight < scoreHeight || bHeight < scoreHeight) {
+      endGame();
+    }
+
+    if (GAME.status === STATUS.END) return;
+
     if (bodyA.index === bodyB.index) {
       // 충돌한 두개 삭제하고, 다음 인덱스 아이템을 충돌 위치에서 생성
       const newIndex = bodyA.index + 1;
@@ -217,9 +271,9 @@ const resize = () => {
 
   render.canvas.style.width = `${gameWidth}px`;
   render.canvas.style.height = `${gameHeight}px`;
-
-  document.getElementById('game-score').style.width = `${GAME.width}px`;
-  document.getElementById('game-score').style.transform = `scale(${scale})`;
+  GAME.elements.ui.style.width = `${GAME.width}px`;
+  GAME.elements.ui.style.height = `${GAME.height}px`;
+  GAME.elements.ui.style.transform = `scale(${scale})`;
 };
 
 document.body.onload = resize;

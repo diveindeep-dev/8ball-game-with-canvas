@@ -9,26 +9,38 @@ const STATUS = {
   END: 4,
 };
 
+const initialGame = {
+  score: 0,
+  record: 0,
+  flag: 0,
+  combo: 3,
+};
+
 export const GAME = {
   width: 600,
   height: 900,
   status: STATUS.READY,
-  score: 0,
-  record: 0,
-  flag: 0,
-  combo: 5,
+  score: initialGame.score,
+  record: initialGame.record,
+  flag: initialGame.flag,
+  combo: initialGame.combo,
   elements: {
     display: document.getElementById('game-display'),
     ui: document.getElementById('game-combo-ui'),
     valueScore: document.getElementById('value-score'),
     valueCombo: document.getElementById('value-combo'),
     valueRecord: document.getElementById('value-record'),
+    endContainer: document.getElementById('game-end-container'),
+    restartButton: document.getElementById('button-restart'),
+    valueResult: document.getElementById('value-result'),
+    valueEndScore: document.getElementById('value-end-score'),
   },
 };
 
 const lastIndex = BURGER.length - 1;
 
 const engine = Engine.create();
+const runner = Runner.create();
 const render = Render.create({
   engine,
   element: GAME.elements.display,
@@ -39,9 +51,6 @@ const render = Render.create({
     background: COLORS.gameBack,
   },
 });
-
-Render.run(render);
-Runner.run(engine);
 
 // 직사각형으로 벽 만들기
 // Matter.Bodies.rectangle(x, y, width, height, [options])
@@ -79,8 +88,6 @@ const wallStatics = [
   ),
 ];
 
-Composite.add(engine.world, wallStatics);
-
 const displayScore = () => {
   GAME.elements.valueScore.innerText = GAME.score;
   GAME.elements.valueCombo.innerText = GAME.combo;
@@ -105,6 +112,9 @@ const saveRecord = () => {
   if (GAME.score > GAME.record) {
     GAME.record = GAME.score;
     localStorage.setItem('8ball-combo', JSON.stringify(GAME.record));
+    GAME.elements.valueEndScore.innerText = `New Record ${GAME.record}`;
+  } else {
+    GAME.elements.valueEndScore.innerText = `${GAME.score}`;
   }
   displayRecord();
 };
@@ -186,23 +196,19 @@ const checkCombo = () => {
       Composite.remove(engine.world, combo);
     }, 500);
 
-    if (GAME.combo === 0) {
-      endGame();
-    } else {
-      setTimeout(() => {
+    setTimeout(() => {
+      if (GAME.combo === 0) {
+        GAME.elements.valueResult.innerText = '✨WIN✨';
+        endGame();
+      } else {
         const isLast = Composite.allBodies(engine.world).filter(
           (body) => body.isStatic !== true && body.index === lastIndex,
         );
         GAME.flag = isLast.length > 0 ? 1 : 0;
         GAME.status = STATUS.READY;
-      }, 1800);
-    }
+      }
+    }, 1800);
   }
-};
-
-const endGame = () => {
-  GAME.status = STATUS.END;
-  saveRecord();
 };
 
 let readyItem = null;
@@ -267,7 +273,38 @@ const dropItem = (x) => {
   }, 500);
 };
 
+GAME.elements.restartButton.addEventListener('click', (event) => {
+  event.preventDefault();
+  restart();
+});
+
+const endGame = () => {
+  GAME.status = STATUS.END;
+  saveRecord();
+  GAME.elements.endContainer.style.display = 'flex';
+  Render.stop(render);
+  Runner.stop(runner);
+};
+
+const restart = () => {
+  GAME.score = initialGame.score;
+  GAME.record = initialGame.record;
+  GAME.flag = initialGame.flag;
+  GAME.combo = initialGame.combo;
+  GAME.status = STATUS.READY;
+  Composite.clear(engine.world);
+  Engine.clear(engine);
+  Render.stop(render);
+  Runner.stop(runner);
+  startGame();
+};
+
 const startGame = () => {
+  GAME.elements.endContainer.style.display = 'none';
+  Render.run(render);
+  Runner.run(runner, engine);
+  Composite.add(engine.world, wallStatics);
+
   if (GAME.score > 0) return;
 
   getRecord();
@@ -329,6 +366,7 @@ Events.on(engine, 'collisionStart', (e) => {
     // 게임종료
     if (aHeight < scoreHeight || bHeight < scoreHeight) {
       if (!side) {
+        GAME.elements.valueResult.innerText = 'GAME OVER!';
         endGame();
       }
     }

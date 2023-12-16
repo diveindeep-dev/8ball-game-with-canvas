@@ -15,6 +15,7 @@ export const GAME = {
   status: STATUS.READY,
   score: 0,
   record: 0,
+  flag: 0,
   combo: 5,
   elements: {
     display: document.getElementById('game-display'),
@@ -24,6 +25,8 @@ export const GAME = {
     valueRecord: document.getElementById('value-record'),
   },
 };
+
+const lastIndex = BURGER.length - 1;
 
 const engine = Engine.create();
 const render = Render.create({
@@ -106,6 +109,97 @@ const saveRecord = () => {
   displayRecord();
 };
 
+// 터지는 효과
+const popEffect = (bodies) => {
+  const pops = bodies.map((body) => {
+    const { position, index } = body;
+    const radius = BURGER[index].radius;
+    return Bodies.circle(position.x, position.y, radius, {
+      isStatic: true,
+      render: {
+        sprite: {
+          texture: '/assets/burger/pop1.png',
+          xScale: (radius * 2) / 1000,
+          yScale: (radius * 2) / 1000,
+        },
+      },
+    });
+  });
+  Composite.add(engine.world, pops);
+  setTimeout(() => {
+    Composite.remove(engine.world, pops);
+  }, 100);
+};
+
+// 콤보 알림 요소
+const noticeCombo = Bodies.rectangle(GAME.width / 2, GAME.height / 2, 500, 500, {
+  name: 'notice',
+  isSensor: true,
+  isStatic: true,
+  render: {
+    sprite: {
+      xScale: 0.3,
+      yScale: 0.3,
+      texture: '/assets/burger/notice-combo.png',
+    },
+  },
+});
+
+const comboItem = Bodies.circle(GAME.width / 2, SIZES.scoreHeight / 2, 45, {
+  name: 'combo',
+  render: {
+    sprite: {
+      texture: '/assets/burger/combo.png',
+      xScale: 90 / 1000,
+      yScale: 90 / 1000,
+    },
+  },
+});
+
+const checkCombo = () => {
+  if (GAME.flag !== 1) return;
+
+  const all = Composite.allBodies(engine.world).filter(
+    (body) => body.isStatic !== true && body.index > lastIndex - 3,
+  );
+
+  const burger = all.find((item) => item.index === lastIndex);
+  const fries = all.find((item) => item.index === lastIndex - 1);
+  const coke = all.find((item) => item.index === lastIndex - 2);
+
+  if (burger && fries && coke) {
+    GAME.status = STATUS.PAUSE;
+    const combo = [burger, fries, coke];
+
+    GAME.combo -= 1;
+    GAME.score += 100;
+    Composite.add(engine.world, noticeCombo);
+
+    setTimeout(() => {
+      Composite.remove(engine.world, noticeCombo);
+    }, 1000);
+
+    // 기존 콤보 아이템 처리
+    setTimeout(() => {
+      popEffect(combo);
+      Composite.add(engine.world, comboItem);
+      Composite.remove(engine.world, combo);
+    }, 500);
+
+    if (GAME.combo === 0) {
+      endGame();
+    } else {
+      setTimeout(() => {
+        const isLast = Composite.allBodies(engine.world).filter(
+          (body) => body.isStatic !== true && body.index === lastIndex,
+        );
+        GAME.flag = isLast.length > 0 ? 1 : 0;
+        GAME.status = STATUS.READY;
+      }, 1800);
+    }
+  }
+};
+
 const endGame = () => {
   GAME.status = STATUS.END;
   saveRecord();
@@ -164,9 +258,11 @@ const dropItem = (x) => {
   readyItem = newIngredient({ x });
   currentIndex = readyItem.index;
   setTimeout(() => {
-    if (GAME.status === STATUS.DROP) {
+    if (GAME.status === STATUS.DROP || GAME.status === STATUS.PAUSE) {
       Composite.add(engine.world, readyItem);
-      GAME.status = STATUS.READY;
+      if (GAME.status === STATUS.DROP) {
+        GAME.status = STATUS.READY;
+      }
     }
   }, 500);
 };
@@ -207,25 +303,34 @@ Events.on(mouseConstraint, 'mousemove', (e) => {
 
 // 마우스 클릭 or 터치 후 drop
 Events.on(mouseConstraint, 'mouseup', (e) => {
-  dropItem(e.mouse.position.x);
+  if (GAME.status === STATUS.READY) {
+    dropItem(e.mouse.position.x);
+  }
 });
 
 // 충돌시
 Events.on(engine, 'collisionStart', (e) => {
+  if (GAME.status === STATUS.PAUSE) return;
+
   e.pairs.forEach((collision) => {
     const { bodyA, bodyB } = collision;
     // static, 마지막 아이템 충돌은 제외
-    if (bodyA.isStatic || bodyB.isStatic) return;
-    const lastIndex = BURGER.length - 1;
+    if (bodyA.isStatic || bodyA.name || bodyB.isStatic || bodyB.name) return;
     if (bodyA.index === lastIndex || bodyB.index === lastIndex) return;
 
     // 종료 조건
     const aHeight = bodyA.position.y + BURGER[bodyA.index].radius;
     const bHeight = bodyB.position.y + BURGER[bodyB.index].radius;
 
-    //게임종료
+    // 에러처리
+    const side =
+      bodyA.position.y < scoreHeight && bodyB.position.y < scoreHeight;
+
+    // 게임종료
     if (aHeight < scoreHeight || bHeight < scoreHeight) {
-      endGame();
+      if (!side) {
+        endGame();
+      }
     }
 
     if (GAME.status === STATUS.END) return;
@@ -247,6 +352,12 @@ Events.on(engine, 'collisionStart', (e) => {
       );
       Composite.add(engine.world, nextItem);
       GAME.score += BURGER[newIndex].point;
+
+      // combo 확인하도록 조건 생성
+      if (newIndex === lastIndex) {
+        GAME.flag = 1;
+      }
+      checkCombo();
       displayScore();
     }
   });

@@ -145,17 +145,6 @@ const noticeCombo = Bodies.rectangle(GAME.width / 2, GAME.height / 2, 500, 500, 
   },
 });
 
-const comboItem = Bodies.circle(GAME.width / 2, SIZES.scoreHeight / 2, 45, {
-  name: 'combo',
-  render: {
-    sprite: {
-      texture: '/assets/burger/combo.png',
-      xScale: 90 / 1000,
-      yScale: 90 / 1000,
-    },
-  },
-});
-
 const checkCombo = () => {
   if (GAME.flag !== 1) return;
 
@@ -178,6 +167,17 @@ const checkCombo = () => {
     setTimeout(() => {
       Composite.remove(engine.world, noticeCombo);
     }, 1000);
+
+    const comboItem = Bodies.circle(GAME.width / 2, SIZES.scoreHeight / 2, 45, {
+      name: 'combo',
+      render: {
+        sprite: {
+          texture: '/assets/burger/combo.png',
+          xScale: 90 / 1000,
+          yScale: 90 / 1000,
+        },
+      },
+    });
 
     // 기존 콤보 아이템 처리
     setTimeout(() => {

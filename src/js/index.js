@@ -250,7 +250,7 @@ const dropItem = (x) => {
     isStatic: false,
   });
   Composite.add(engine.world, droppedItem);
-  GAME.score += BURGER[currentIndex].point;
+  GAME.score += BURGER[currentIndex].point / 2;
   displayScore();
   Composite.remove(engine.world, readyItem);
 

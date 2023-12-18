@@ -1,3 +1,4 @@
+import { gameTitles } from '../config.js';
 import BURGER from './burger.js';
 import { COLORS, SIZES } from '../styles/variable.js';
 const { Engine,  Render,  Runner,  Composite,  Bodies,  Mouse,  MouseConstraint,  Events } = Matter;
@@ -19,6 +20,7 @@ const initialGame = {
 export const GAME = {
   width: 600,
   height: 900,
+  title: null,
   status: STATUS.READY,
   score: initialGame.score,
   record: initialGame.record,
@@ -26,7 +28,11 @@ export const GAME = {
   combo: initialGame.combo,
   elements: {
     display: document.getElementById('game-display'),
-    ui: document.getElementById('game-combo-ui'),
+    ui: document.getElementById('game-ui'),
+    startingScreen: document.getElementById('game-starting-screen'),
+    gameTitleOptions: document.getElementById('game-title-options'),
+    startButton: document.getElementById('button-start'),
+    comboUi: document.getElementById('game-combo-ui'),
     valueScore: document.getElementById('value-score'),
     valueCombo: document.getElementById('value-combo'),
     valueRecord: document.getElementById('value-record'),
@@ -301,6 +307,8 @@ const restart = () => {
 
 const startGame = () => {
   GAME.elements.endContainer.style.display = 'none';
+  GAME.elements.startingScreen.style.display = 'none';
+  GAME.elements.comboUi.style.display = 'initial';
   Render.run(render);
   Runner.run(runner, engine);
   Composite.add(engine.world, wallStatics);
@@ -314,8 +322,6 @@ const startGame = () => {
   currentIndex = readyItem.index;
   Composite.add(engine.world, readyItem);
 };
-
-startGame();
 
 // 마우스 설정
 const mouse = Mouse.create(render.canvas);
@@ -403,7 +409,7 @@ Events.on(engine, 'collisionStart', (e) => {
 
 const resize = () => {
   const screenWidth = window.innerWidth;
-  const screenHeight = window.innerHeight - SIZES.menuHeight;
+  const screenHeight = window.innerHeight;
 
   let gameWidth;
   let gameHeight;
@@ -430,8 +436,41 @@ document.body.onresize = resize;
 
 
 // 게임 선택
-const loadGame = (event) => {
+const getTitle = (event) => {
   const gameTitle = event.target.value;
+  GAME.title = gameTitle;
 };
 
-document.querySelector('select').addEventListener('change', loadGame);
+gameTitles.map((title, i) => {
+  const titleOption = document.createElement('div');
+  const titleInput = document.createElement('input');
+  const titleLabel = document.createElement('label');
+
+  titleOption.classList.add('game-title-option');
+  titleInput.setAttribute('type', 'radio');
+  titleInput.setAttribute('name', 'game');
+  titleInput.setAttribute('id', title.id);
+  titleInput.setAttribute('value', title.id);
+  titleLabel.textContent = title.title;
+  titleLabel.setAttribute('for', title.id);
+  if (i === 0) {
+    titleInput.setAttribute('checked', 'checked');
+    GAME.title = title.id;
+  }
+
+  titleOption.appendChild(titleInput);
+  titleOption.appendChild(titleLabel);
+
+  GAME.elements.gameTitleOptions.appendChild(titleOption);
+});
+
+const radios = document.querySelectorAll('input[type=radio][name=game]');
+
+radios.forEach((radio) => {
+  radio.addEventListener('change', getTitle);
+});
+
+GAME.elements.startButton.addEventListener('click', (event) => {
+  event.preventDefault();
+  startGame();
+});

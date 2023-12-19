@@ -22,6 +22,7 @@ const COMMON = {
     gameTitleOptions: document.getElementById('game-title-options'),
     startButton: document.getElementById('button-start'),
     restartButton: document.getElementById('button-restart'),
+    footer: document.querySelector('footer'),
   },
 };
 
@@ -133,7 +134,7 @@ COMMON.elements.startButton.addEventListener('click', (event) => {
 // 리사이즈
 const resize = () => {
   const screenWidth = window.innerWidth;
-  const screenHeight = window.innerHeight;
+  const screenHeight = window.innerHeight - SIZES.footerHeight;
 
   let gameWidth;
   let gameHeight;
@@ -153,6 +154,8 @@ const resize = () => {
   COMMON.elements.ui.style.width = `${COMMON.width}px`;
   COMMON.elements.ui.style.height = `${COMMON.height}px`;
   COMMON.elements.ui.style.transform = `scale(${scale})`;
+  COMMON.elements.footer.style.width = `${COMMON.width}px`;
+  COMMON.elements.footer.style.transform = `scale(${scale})`;
 };
 
 document.body.onload = resize;

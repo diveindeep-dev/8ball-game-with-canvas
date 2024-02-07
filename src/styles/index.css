@@ -1,6 +1,262 @@
+@import './font.css';
+
 * {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
   text-decoration: none;
+}
+
+body {
+  width: 100%;
+  height: 100%;
+  background-image: repeating-conic-gradient(#ffffff 0% 25%, #000000 0% 50%);
+  background-position: 0 0, 80px 80px;
+  background-size: 160px 160px;
+  background-color: #000000;
+}
+
+input:focus {
+  outline: none;
+}
+
+:root {
+  --px-menu-height: 50px;
+  --color-text-dark: #535353;
+  --color-yellow: #ffcd55;
+  --color-red: #de3c51;
+  --font-combo: 'Chakra Petch', sans-serif;
+  --font-game1: 'Press Start 2P';
+  --font-game2: 'VT323';
+}
+
+.container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+#game-display {
+  position: relative;
+}
+
+#game-ui {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  transform-origin: top left;
+  line-height: 1;
+  pointer-events: none;
+}
+
+#game-starting-screen {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  pointer-events: initial;
+
+  font-family: var(--font-game1);
+  background-color: rgb(37, 37, 37);
+  background-image: url('/assets/logo512.png');
+  background-size: 100%;
+  background-repeat: no-repeat;
+  background-position: 300px 500px;
+  color: white;
+}
+
+.game-title-option {
+  width: 300px;
+  padding: 10px;
+  display: flex;
+  align-items: center;
+}
+
+input[type='radio'][name='game'] {
+  appearance: none;
+  line-height: 1;
+}
+
+input[type='radio']::before {
+  content: '▸';
+  font-size: 30px;
+  opacity: 0;
+  color: white;
+}
+
+input:checked::before {
+  opacity: 1;
+  color: var(--color-yellow);
+}
+
+label {
+  margin-left: 10px;
+  font-size: 20px;
+}
+
+input[type='radio']:checked + label {
+  color: var(--color-yellow);
+}
+
+#button-start {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px 30px;
+  margin: 30px;
+  font-size: 28px;
+  font-weight: 700;
+  border: 3px solid #ffffff;
+  &:hover {
+    cursor: pointer;
+    background-color: #ffffff;
+    color: black;
+  }
+}
+
+#game-combo-ui {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  transform-origin: top left;
+  line-height: 1;
+  display: none;
+}
+
+.score-container {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  width: 100%;
+
+  font-family: var(--font-combo);
+  color: var(--color-text-dark);
+  font-weight: 700;
+}
+
+#game-score {
+  display: flex;
+  justify-content: space-between;
+  top: 0;
+  height: 160px;
+  border-bottom: 5px dotted #de3c51;
+  padding: 0 30px;
+}
+
+#game-combo {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  font-size: 16px;
+}
+
+#game-record {
+  bottom: 0;
+  height: 60px;
+  padding: 0 20px;
+  font-size: 35px;
+  -webkit-text-stroke: 1px #ffffff;
+}
+
+#value-score {
+  font-size: 70px;
+  color: #ffffff;
+  -webkit-text-stroke: 2px var(--color-text-dark);
+}
+
+#value-combo {
+  font-size: 40px;
+  color: #ffffff;
+  -webkit-text-stroke: 2px var(--color-text-dark);
+}
+
+#value-record {
+  padding: 0 10px;
+}
+
+#game-end-container {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  background-color: #00000049;
+}
+
+#game-end-body {
+  width: 500px;
+  height: 300px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border: 5px solid var(--color-text-dark);
+  padding: 20px;
+  font-family: var(--font-combo);
+  background-color: #fafafa;
+  pointer-events: initial;
+}
+
+#value-result {
+  font-size: 60px;
+  font-weight: 700;
+  color: var(--color-red);
+  -webkit-text-stroke: 2px #000000;
+  margin-bottom: 10px;
+}
+
+#value-end-score {
+  font-size: 30px;
+  font-weight: 700;
+  color: var(--color-yellow);
+  -webkit-text-stroke: 1px #000000;
+  margin-bottom: 10px;
+}
+
+#button-restart {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 30px;
+  font-size: 30px;
+  font-weight: 700;
+  background-color: var(--color-yellow);
+  border: 2px solid var(--color-text-dark);
+  &:hover {
+    cursor: pointer;
+  }
+}
+
+.title {
+  font-size: 50px;
+  padding: 20px 0;
+}
+
+.title-sub {
+  font-size: 25px;
+}
+
+footer {
+  height: 80px;
+  width: 100%;
+  font-weight: 700;
+  font-family: var(--font-game1);
+  text-align: center;
+  padding: 20px;
+  color: #5290d6;
+  font-size: 20px;
+}
+
+a {
+  background-color: blue;
+  padding: 5px;
+}
+a:visited {
+  color: inherit;
 }
